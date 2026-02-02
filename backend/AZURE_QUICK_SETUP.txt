@@ -1,0 +1,24 @@
+QUICK AZURE OPENAI SETUP
+========================
+
+1. Create Azure OpenAI Resource:
+   - Go to https://portal.azure.com/
+   - Create "Azure OpenAI" resource
+   - Copy Endpoint and API Key
+
+2. Deploy a Model:
+   - Go to Azure OpenAI Studio (https://oai.azure.com/)
+   - Deployments → Create
+   - Choose model (e.g., gpt-4o-mini)
+   - Note the deployment name
+
+3. Add to .env:
+   LLM_PROVIDER=azure
+   AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com
+   AZURE_OPENAI_API_KEY=your-api-key
+   AZURE_OPENAI_API_VERSION=2024-02-15-preview
+   AZURE_OPENAI_DEPLOYMENT_NAME=gpt-4o-mini
+
+4. Restart backend and test!
+
+For detailed instructions, see AZURE_OPENAI_SETUP.md in the root directory.

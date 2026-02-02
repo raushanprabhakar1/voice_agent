@@ -1,0 +1,18 @@
+livekit-agents
+livekit-plugins-deepgram
+livekit-plugins-cartesia
+livekit-plugins-openai
+livekit-plugins-anthropic
+# Avatar plugins (install the one you want to use):
+# For Tavus: pip install 'livekit-agents[tavus]'
+# For Beyond Presence: pip install 'livekit-agents[bey]'
+# Note: These are optional extras, install separately as needed
+livekit
+openai
+anthropic
+supabase
+python-dotenv
+pydantic
+fastapi
+uvicorn
+python-dateutil
