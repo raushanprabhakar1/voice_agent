@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Room, RoomEvent, RemoteParticipant, DataPacket_Kind } from 'livekit-client'
 import VoiceAgent from './components/VoiceAgent'
 import ToolCallDisplay from './components/ToolCallDisplay'
@@ -30,6 +30,7 @@ function App() {
   const [toolCalls, setToolCalls] = useState<ToolCall[]>([])
   const [summary, setSummary] = useState<ConversationSummaryData | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const roomRef = useRef<Room | null>(null)
 
 
   const connectToRoom = async () => {
@@ -138,6 +139,7 @@ function App() {
       console.log('   LiveKit URL:', finalUrl)
       
       const newRoom = new Room()
+      roomRef.current = newRoom // Store in ref for access in handlers
       
       // Listen for data messages - listen to ALL data, not just specific topics
       // IMPORTANT: This must be set up BEFORE connecting to the room
@@ -192,6 +194,25 @@ function App() {
               })
             } else if (data.type === 'tool_result') {
               console.log('✅ Tool result received:', data.name)
+              
+              // Check if this is end_conversation - disconnect the call
+              if (data.name === 'end_conversation') {
+                console.log('👋 End conversation tool called - disconnecting...')
+                // Small delay to ensure summary is received first
+                setTimeout(() => {
+                  const currentRoom = roomRef.current
+                  if (currentRoom) {
+                    currentRoom.disconnect()
+                    setRoom(null)
+                    setIsConnected(false)
+                    setToolCalls([])
+                    setSummary(null)
+                    roomRef.current = null
+                    console.log('✅ Call disconnected after end_conversation')
+                  }
+                }, 1000) // 1 second delay to allow summary to arrive
+              }
+              
               setToolCalls(prev => {
                 const updated = [...prev]
                 
@@ -406,6 +427,7 @@ function App() {
       })
       
       setRoom(newRoom)
+      roomRef.current = newRoom // Keep ref in sync
       setIsConnected(true)
     } catch (err: any) {
       let errorMessage = 'Failed to connect'
@@ -427,6 +449,7 @@ function App() {
     if (room) {
       room.disconnect()
       setRoom(null)
+      roomRef.current = null
       setIsConnected(false)
       setToolCalls([])
       setSummary(null)
