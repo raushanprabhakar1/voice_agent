@@ -1,0 +1,10 @@
+{
+  "functions": {
+    "api/token.ts": {
+      "includeFiles": "package.json"
+    }
+  },
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "installCommand": "npm install"
+}
