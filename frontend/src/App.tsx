@@ -56,22 +56,67 @@ function App() {
       
       // Get access token from backend
       const LIVEKIT_URL = (import.meta.env?.VITE_LIVEKIT_URL as string) || 'wss://your-livekit-server.com'
-      const response = await fetch('/api/token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          room: 'voice-agent-room',
-          participant: `user-${Date.now()}`,
-        }),
-      })
       
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.error || 'Failed to get access token')
+      console.log('🔑 Requesting access token from /api/token...')
+      console.log('   LiveKit URL:', LIVEKIT_URL)
+      
+      let response: Response
+      try {
+        response = await fetch('/api/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            room: 'voice-agent-room',
+            participant: `user-${Date.now()}`,
+          }),
+        })
+      } catch (fetchError: any) {
+        console.error('❌ Fetch error:', fetchError)
+        throw new Error(`Failed to reach token API: ${fetchError.message}. Make sure the token API is deployed and accessible.`)
       }
       
-      const { token, url } = await response.json()
+      console.log('📡 Token API response status:', response.status, response.statusText)
+      
+      if (!response.ok) {
+        let errorMessage = 'Failed to get access token'
+        try {
+          const errorData = await response.json()
+          errorMessage = errorData.error || errorMessage
+          console.error('❌ Token API error:', errorData)
+        } catch (parseError) {
+          const text = await response.text().catch(() => '')
+          console.error('❌ Token API error (non-JSON):', text)
+          errorMessage = `Token API returned ${response.status}: ${text || response.statusText}`
+        }
+        
+        // Provide helpful error messages based on status code
+        if (response.status === 500) {
+          errorMessage += '. Check that LIVEKIT_API_KEY, LIVEKIT_API_SECRET, and LIVEKIT_URL are set in your deployment environment variables.'
+        } else if (response.status === 404) {
+          errorMessage += '. The token API endpoint was not found. Make sure /api/token.ts is deployed correctly (Vercel) or netlify/functions/token.js (Netlify).'
+        } else if (response.status === 405) {
+          errorMessage += '. The token API only accepts POST requests.'
+        }
+        
+        throw new Error(errorMessage)
+      }
+      
+      const responseData = await response.json().catch(async (parseError) => {
+        const text = await response.text().catch(() => '')
+        console.error('❌ Failed to parse token API response:', parseError, 'Response:', text)
+        throw new Error('Token API returned invalid JSON response')
+      })
+      
+      const { token, url } = responseData
+      
+      if (!token) {
+        console.error('❌ Token API response missing token:', responseData)
+        throw new Error('Token API response missing token field')
+      }
+      
       const finalUrl = url || LIVEKIT_URL
+      console.log('✅ Access token received successfully')
+      console.log('   LiveKit URL:', finalUrl)
       
       const newRoom = new Room()
       
