@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Room, LocalAudioTrack, RemoteAudioTrack, RemoteVideoTrack, Track, RemoteParticipant } from 'livekit-client'
+import { Room, RemoteAudioTrack, RemoteVideoTrack, Track, RemoteParticipant } from 'livekit-client'
 import AvatarPlayer from './AvatarPlayer'
 import './VoiceAgent.css'
 
@@ -25,7 +25,7 @@ const VoiceAgent: React.FC<VoiceAgentProps> = ({ room }) => {
     const setupTracks = () => {
       if (!audioRef.current) return
 
-      const handleTrackSubscribed = (track: Track, publication: any, participant: RemoteParticipant) => {
+      const handleTrackSubscribed = (track: Track, _publication: any, participant: RemoteParticipant) => {
         console.log(`Track subscribed: ${track.kind} from ${participant.identity}`)
         
         if (track.kind === Track.Kind.Audio) {
@@ -33,21 +33,20 @@ const VoiceAgent: React.FC<VoiceAgentProps> = ({ room }) => {
           if (audioElement) {
             track.attach(audioElement)
             
-            // Detect speaking
+            // Detect speaking using periodic checks since event-based detection isn't available
             if (track instanceof RemoteAudioTrack) {
-              track.on('started', () => {
-                console.log('Agent started speaking')
-                setIsSpeaking(true)
-              })
-              track.on('stopped', () => {
-                console.log('Agent stopped speaking')
-                setIsSpeaking(false)
-              })
+              // Use a simple interval to check if audio is playing
+              const checkInterval = setInterval(() => {
+                // Check if track is attached and element is playing
+                if (audioElement && !audioElement.paused && audioElement.currentTime > 0) {
+                  setIsSpeaking(true)
+                } else {
+                  setIsSpeaking(false)
+                }
+              }, 100) // Check every 100ms
               
-              // Also detect audio level changes for more accurate speaking detection
-              track.on('volumeLevelChanged', (level: number) => {
-                setIsSpeaking(level > 0.01) // Threshold for speaking detection
-              })
+              // Store interval ID for cleanup
+              ;(track as any)._speakingCheckInterval = checkInterval
             }
           }
         } else if (track.kind === Track.Kind.Video) {
@@ -57,15 +56,6 @@ const VoiceAgent: React.FC<VoiceAgentProps> = ({ room }) => {
           if (track instanceof RemoteVideoTrack) {
             console.log(`Video track received from ${participant.identity}`)
             setVideoTrack(track)
-            
-            track.on('started', () => {
-              console.log('Avatar video started')
-            })
-            
-            track.on('ended', () => {
-              console.log('Avatar video ended')
-              setVideoTrack(null)
-            })
           }
         }
       }
@@ -73,6 +63,11 @@ const VoiceAgent: React.FC<VoiceAgentProps> = ({ room }) => {
       const handleTrackUnsubscribed = (track: Track) => {
         if (track.kind === Track.Kind.Audio) {
           track.detach()
+          // Clear speaking check interval if it exists
+          if (track instanceof RemoteAudioTrack && (track as any)._speakingCheckInterval) {
+            clearInterval((track as any)._speakingCheckInterval)
+            delete (track as any)._speakingCheckInterval
+          }
         } else if (track.kind === Track.Kind.Video) {
           if (track instanceof RemoteVideoTrack) {
             track.detach()

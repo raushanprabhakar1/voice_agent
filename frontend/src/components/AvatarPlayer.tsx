@@ -66,21 +66,6 @@ const AvatarPlayer: React.FC<AvatarPlayerProps> = ({
       setError(null)
       console.log('AvatarPlayer: Video track attached successfully')
 
-      // Handle video track events
-      const handleStarted = () => {
-        console.log('AvatarPlayer: Video track subscribed/started')
-        setAvatarReady(true)
-      }
-
-      const handleEnded = () => {
-        console.log('AvatarPlayer: Video track unsubscribed/ended')
-        setAvatarReady(false)
-      }
-
-      // Use on() method for RemoteVideoTrack events (same as VoiceAgent.tsx)
-      videoTrack.on('subscribed', handleStarted)
-      videoTrack.on('unsubscribed', handleEnded)
-
       // Force play
       videoElement.play().catch((err: any) => {
         console.warn('AvatarPlayer: Error playing video:', err)
@@ -88,8 +73,6 @@ const AvatarPlayer: React.FC<AvatarPlayerProps> = ({
 
       return () => {
         console.log('AvatarPlayer: Cleaning up video track')
-        videoTrack.off('subscribed', handleStarted)
-        videoTrack.off('unsubscribed', handleEnded)
         videoTrack.detach()
       }
     } catch (err: any) {
