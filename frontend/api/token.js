@@ -1,5 +1,5 @@
 // Vercel serverless function for LiveKit token generation
-const { AccessToken } = require('livekit-server-sdk')
+const { AccessToken, RoomServiceClient, AgentDispatchClient } = require('livekit-server-sdk')
 
 module.exports = async function handler(req, res) {
   try {
@@ -81,6 +81,53 @@ module.exports = async function handler(req, res) {
       })
 
       const token = await at.toJwt()
+
+      // Ensure the room exists and explicitly dispatch the agent
+      // This is required for LiveKit Cloud - agent must be dispatched explicitly
+      try {
+        const roomService = new RoomServiceClient(livekitUrl, apiKey, apiSecret)
+        
+        // Create or get the room
+        await roomService.createRoom({
+          name: room,
+          emptyTimeout: 300, // 5 minutes
+          maxParticipants: 10,
+        })
+        
+        console.log(`✅ Room ready: ${room}`)
+        
+        // Explicitly dispatch the agent to this room
+        // The agent name "voice-agent" must match the backend agent_name
+        try {
+          const agentDispatch = new AgentDispatchClient(livekitUrl, apiKey, apiSecret)
+          
+          // Dispatch agent with explicit name (must match backend agent_name)
+          const dispatch = await agentDispatch.createDispatch(room, "voice-agent", {
+            metadata: JSON.stringify({ participant: participant })
+          })
+          
+          console.log(`✅ Agent dispatched to room: ${room}`)
+          console.log(`   Dispatch ID: ${dispatch.id}`)
+          console.log(`   Agent name: voice-agent`)
+        } catch (dispatchError) {
+          console.error(`❌ Failed to dispatch agent: ${dispatchError.message}`)
+          // Continue anyway - log the error but don't fail the token generation
+          // The agent might still connect via other means
+        }
+      } catch (roomError) {
+        // Room might already exist, that's okay
+        console.log(`⚠️ Room creation note: ${roomError.message}`)
+        // Try to dispatch anyway
+        try {
+          const agentDispatch = new AgentDispatchClient(livekitUrl, apiKey, apiSecret)
+          const dispatch = await agentDispatch.createDispatch(room, "voice-agent", {
+            metadata: JSON.stringify({ participant: participant })
+          })
+          console.log(`✅ Agent dispatched to existing room: ${room}`)
+        } catch (dispatchError) {
+          console.error(`❌ Failed to dispatch agent to existing room: ${dispatchError.message}`)
+        }
+      }
 
       console.log('✅ Token generated successfully')
       return res.status(200).json({
