@@ -1,4 +1,9 @@
 {
+  "functions": {
+    "api/token.ts": {
+      "runtime": "@vercel/node"
+    }
+  },
   "rewrites": [
     {
       "source": "/api/:path*",
