@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Room, RoomEvent, RemoteParticipant, DataPacket_Kind } from 'livekit-client'
 import VoiceAgent from './components/VoiceAgent'
 import ToolCallDisplay from './components/ToolCallDisplay'
@@ -55,7 +55,7 @@ function App() {
       }
       
       // Get access token from backend
-      const LIVEKIT_URL = import.meta.env.VITE_LIVEKIT_URL || 'wss://your-livekit-server.com'
+      const LIVEKIT_URL = (import.meta.env?.VITE_LIVEKIT_URL as string) || 'wss://your-livekit-server.com'
       const response = await fetch('/api/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -81,7 +81,7 @@ function App() {
       
       // Create a persistent handler that won't be garbage collected
       // IMPORTANT: Store handler reference to prevent garbage collection
-      const dataReceivedHandler = (payload: Uint8Array, participant: RemoteParticipant | undefined, kind: DataPacket_Kind | undefined, topic: string | undefined) => {
+      const dataReceivedHandler = (payload: Uint8Array, _participant: RemoteParticipant | undefined, kind: DataPacket_Kind | undefined, _topic: string | undefined) => {
         if (!payload || payload.length === 0) {
           return
         }
@@ -217,12 +217,11 @@ function App() {
       await newRoom.connect(finalUrl, token)
       console.log('✅ Room connected successfully!')
       console.log('   Room name:', newRoom.name)
-      console.log('   Room SID:', newRoom.sid)
       console.log('   Local participant:', newRoom.localParticipant.identity)
       console.log('   Remote participants:', newRoom.remoteParticipants.size)
       
       // Log all remote participants
-      newRoom.remoteParticipants.forEach((participant, identity) => {
+      newRoom.remoteParticipants.forEach((_participant, identity) => {
         console.log(`   - Remote participant: ${identity}`)
       })
       
@@ -310,11 +309,13 @@ function App() {
         
         // Check if audio track is published (safely)
         try {
-          if (localParticipant.audioTracks && typeof localParticipant.audioTracks.values === 'function') {
-            const audioTracks = Array.from(localParticipant.audioTracks.values())
-            console.log('Audio tracks published:', audioTracks.length)
-            audioTracks.forEach(track => {
-              console.log('Audio track:', track.trackSid, 'enabled:', track.isMuted === false)
+          const audioPublications = Array.from(localParticipant.trackPublications.values()).filter(
+            pub => pub.kind === 'audio'
+          )
+          if (audioPublications.length > 0) {
+            console.log('Audio tracks published:', audioPublications.length)
+            audioPublications.forEach(pub => {
+              console.log('Audio track:', pub.trackSid, 'enabled:', !pub.isMuted)
             })
           } else {
             console.log('Audio tracks not yet available, will be published soon')

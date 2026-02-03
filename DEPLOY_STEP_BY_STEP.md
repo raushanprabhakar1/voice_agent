@@ -47,7 +47,7 @@ Before starting, make sure you have:
    - Go to "Settings" → "Deploy"
    - Set "Start Command" to:
      ```
-     python -m livekit.agents dev agent.py
+     python agent.py
      ```
 
 3. **Set Build Command** (leave empty or set to):
@@ -136,11 +136,31 @@ Look for these in the logs:
 
 ### Step 2.3: Configure Project
 
-1. **Framework Preset**: Select "Vite" (should auto-detect)
-2. **Root Directory**: Set to `frontend`
-3. **Build Command**: Should be `npm run build` (auto-detected)
-4. **Output Directory**: Should be `dist` (auto-detected)
-5. **Install Command**: Should be `npm install` (auto-detected)
+**Note**: Vercel's UI may vary. If you don't see these options during import, you can set them after importing in Settings.
+
+**During Import:**
+1. **Framework Preset**: 
+   - Look for dropdown labeled "Framework Preset" or "Framework"
+   - Select **"Vite"** (or "Other" if Vite not listed - it will auto-detect)
+2. **Root Directory**: 
+   - Look for "Root Directory" field
+   - Set to: `frontend`
+   - Or click folder icon to browse and select `frontend` folder
+3. **Build Command**: Should auto-fill as `npm run build` (if not, set manually)
+4. **Output Directory**: Should auto-fill as `dist` (if not, set manually)
+5. **Install Command**: Should auto-fill as `npm install` (if not, set manually)
+
+**If you can't find these during import:**
+1. Import the project with default settings
+2. After import, go to **Settings** → **General**
+3. Set **Root Directory** to: `frontend`
+4. Go to **Settings** → **Build & Development Settings**
+5. Set Framework to "Vite", Build Command to `npm run build`, Output Directory to `dist`
+
+**Alternative**: If Root Directory setting is not available, use these build commands:
+- **Build Command**: `cd frontend && npm run build`
+- **Output Directory**: `frontend/dist`
+- **Install Command**: `cd frontend && npm install`
 
 ### Step 2.4: Add Environment Variables
 

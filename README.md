@@ -237,7 +237,7 @@ For detailed step-by-step deployment instructions, see **[DEPLOY_STEP_BY_STEP.md
 1. Sign up at [railway.app](https://railway.app)
 2. Create new project from GitHub repo
 3. Set root directory: `backend`
-4. Set start command: `python -m livekit.agents dev agent.py`
+4. Set start command: `python agent.py`
 5. Add all environment variables
 6. Deploy
 

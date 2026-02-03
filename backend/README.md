@@ -199,7 +199,7 @@ For deployment instructions, see the main [DEPLOY_STEP_BY_STEP.md](../DEPLOY_STE
 
 1. Create Railway project from GitHub
 2. Set root directory: `backend`
-3. Set start command: `python -m livekit.agents dev agent.py`
+3. Set start command: `python agent.py`
 4. Add all environment variables
 5. Deploy
 
