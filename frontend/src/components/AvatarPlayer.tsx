@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { RemoteVideoTrack, Track } from 'livekit-client'
+import { RemoteVideoTrack } from 'livekit-client'
 import './AvatarPlayer.css'
 
 interface AvatarPlayerProps {
@@ -68,27 +68,18 @@ const AvatarPlayer: React.FC<AvatarPlayerProps> = ({
 
       // Handle video track events
       const handleStarted = () => {
-        console.log('AvatarPlayer: Video track started')
+        console.log('AvatarPlayer: Video track subscribed/started')
         setAvatarReady(true)
       }
 
       const handleEnded = () => {
-        console.log('AvatarPlayer: Video track ended')
+        console.log('AvatarPlayer: Video track unsubscribed/ended')
         setAvatarReady(false)
       }
 
-      const handleMuted = () => {
-        console.log('AvatarPlayer: Video track muted')
-      }
-
-      const handleUnmuted = () => {
-        console.log('AvatarPlayer: Video track unmuted')
-      }
-
-      videoTrack.on('started', handleStarted)
-      videoTrack.on('ended', handleEnded)
-      videoTrack.on('muted', handleMuted)
-      videoTrack.on('unmuted', handleUnmuted)
+      // Use on() method for RemoteVideoTrack events (same as VoiceAgent.tsx)
+      videoTrack.on('subscribed', handleStarted)
+      videoTrack.on('unsubscribed', handleEnded)
 
       // Force play
       videoElement.play().catch((err: any) => {
@@ -97,10 +88,8 @@ const AvatarPlayer: React.FC<AvatarPlayerProps> = ({
 
       return () => {
         console.log('AvatarPlayer: Cleaning up video track')
-        videoTrack.off('started', handleStarted)
-        videoTrack.off('ended', handleEnded)
-        videoTrack.off('muted', handleMuted)
-        videoTrack.off('unmuted', handleUnmuted)
+        videoTrack.off('subscribed', handleStarted)
+        videoTrack.off('unsubscribed', handleEnded)
         videoTrack.detach()
       }
     } catch (err: any) {

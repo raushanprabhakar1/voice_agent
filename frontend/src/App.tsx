@@ -309,13 +309,14 @@ function App() {
         
         // Check if audio track is published (safely)
         try {
-          const audioPublications = Array.from(localParticipant.trackPublications.values()).filter(
-            pub => pub.kind === 'audio'
-          )
+          const allPublications = Array.from(localParticipant.trackPublications.values())
+          const audioPublications = allPublications.filter(pub => pub.kind === 'audio')
           if (audioPublications.length > 0) {
             console.log('Audio tracks published:', audioPublications.length)
-            audioPublications.forEach(pub => {
-              console.log('Audio track:', pub.trackSid, 'enabled:', !pub.isMuted)
+            audioPublications.forEach((pub) => {
+              if (pub.kind === 'audio') {
+                console.log('Audio track:', pub.trackSid, 'enabled:', !pub.isMuted)
+              }
             })
           } else {
             console.log('Audio tracks not yet available, will be published soon')
