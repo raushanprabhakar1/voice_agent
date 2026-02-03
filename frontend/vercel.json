@@ -1,6 +1,6 @@
 {
   "functions": {
-    "api/token.ts": {
+    "api/token.js": {
       "includeFiles": "package.json"
     }
   },

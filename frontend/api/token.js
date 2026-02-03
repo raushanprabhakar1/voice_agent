@@ -1,11 +1,7 @@
 // Vercel serverless function for LiveKit token generation
-import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { AccessToken } from 'livekit-server-sdk'
+const { AccessToken } = require('livekit-server-sdk')
 
-export default async function handler(
-  req: VercelRequest,
-  res: VercelResponse
-) {
+module.exports = async function handler(req, res) {
   try {
     // Enable CORS
     res.setHeader('Access-Control-Allow-Origin', '*')
@@ -42,7 +38,7 @@ export default async function handler(
     })
 
     // Provide detailed error message about which variables are missing
-    const missingVars: string[] = []
+    const missingVars = []
     if (!apiKey || apiKey.trim() === '') missingVars.push('LIVEKIT_API_KEY')
     if (!apiSecret || apiSecret.trim() === '') missingVars.push('LIVEKIT_API_SECRET')
     if (!livekitUrl || livekitUrl.trim() === '') missingVars.push('LIVEKIT_URL')
@@ -70,13 +66,6 @@ export default async function handler(
       })
     }
 
-    // TypeScript: At this point we know these are defined (checked above)
-    if (!apiKey || !apiSecret || !livekitUrl) {
-      return res.status(500).json({ 
-        error: 'Environment variables validation failed unexpectedly.' 
-      })
-    }
-
     // Generate token
     try {
       const at = new AccessToken(apiKey, apiSecret, {
@@ -98,7 +87,7 @@ export default async function handler(
         token,
         url: livekitUrl,
       })
-    } catch (tokenError: any) {
+    } catch (tokenError) {
       console.error('❌ Error generating token:', tokenError)
       console.error('❌ Token error details:', {
         message: tokenError.message,
@@ -109,7 +98,7 @@ export default async function handler(
         error: `Failed to generate token: ${tokenError.message || 'Unknown error'}. Please verify your LIVEKIT_API_KEY and LIVEKIT_API_SECRET are correct.` 
       })
     }
-  } catch (error: any) {
+  } catch (error) {
     // Catch any unexpected errors
     console.error('❌ Unexpected error in token handler:', error)
     console.error('❌ Error details:', {
