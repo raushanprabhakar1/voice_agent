@@ -79,21 +79,40 @@ function App() {
       
       if (!response.ok) {
         let errorMessage = 'Failed to get access token'
+        let errorDetails = ''
+        
+        // Try to get error details from response
         try {
-          const errorData = await response.json()
-          errorMessage = errorData.error || errorMessage
-          console.error('❌ Token API error:', errorData)
+          const text = await response.text()
+          console.error('❌ Token API error response:', text)
+          
+          if (text) {
+            try {
+              const errorData = JSON.parse(text)
+              errorDetails = errorData.error || errorData.message || text
+            } catch {
+              errorDetails = text
+            }
+          } else {
+            errorDetails = response.statusText || 'Unknown error'
+          }
         } catch (parseError) {
-          const text = await response.text().catch(() => '')
-          console.error('❌ Token API error (non-JSON):', text)
-          errorMessage = `Token API returned ${response.status}: ${text || response.statusText}`
+          console.error('❌ Failed to read error response:', parseError)
+          errorDetails = response.statusText || 'Unknown error'
+        }
+        
+        // Build error message
+        if (errorDetails) {
+          errorMessage = errorDetails
         }
         
         // Provide helpful error messages based on status code
         if (response.status === 500) {
-          errorMessage += '. Check that LIVEKIT_API_KEY, LIVEKIT_API_SECRET, and LIVEKIT_URL are set in your deployment environment variables.'
+          if (!errorMessage.includes('LIVEKIT') && !errorMessage.includes('environment variables')) {
+            errorMessage += '. Check that LIVEKIT_API_KEY, LIVEKIT_API_SECRET, and LIVEKIT_URL are set in your Vercel deployment settings (Settings → Environment Variables).'
+          }
         } else if (response.status === 404) {
-          errorMessage += '. The token API endpoint was not found. Make sure /api/token.ts is deployed correctly (Vercel) or netlify/functions/token.js (Netlify).'
+          errorMessage += '. The token API endpoint was not found. Make sure frontend/api/token.ts exists and is deployed correctly (Vercel) or netlify/functions/token.js (Netlify).'
         } else if (response.status === 405) {
           errorMessage += '. The token API only accepts POST requests.'
         }
