@@ -57,17 +57,12 @@ function App() {
       // Get access token from backend
       const LIVEKIT_URL = (import.meta.env?.VITE_LIVEKIT_URL as string) || 'wss://your-livekit-server.com'
       
-      // In development, use local token server (port 3001)
-      // In production, use Vercel serverless function (/api/token)
-      const isDev = import.meta.env.DEV
-      const tokenUrl = isDev ? 'http://localhost:3001/api/token' : '/api/token'
-      
-      console.log('🔑 Requesting access token from', tokenUrl, isDev ? '(dev mode)' : '(production)')
+      console.log('🔑 Requesting access token from /api/token...')
       console.log('   LiveKit URL:', LIVEKIT_URL)
       
       let response: Response
       try {
-        response = await fetch(tokenUrl, {
+        response = await fetch('/api/token', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
